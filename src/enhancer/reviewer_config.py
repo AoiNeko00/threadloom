@@ -77,3 +77,54 @@ STRONG_EXPRESSIONS: list[str] = [
     "immediately applicable", "specific pattern", "workflow",
     "must", "concrete condition", "action mapping",
 ]
+
+# 좁은 범위(narrow scope) 지표 — 특정 라이브러리/도구/버전에 한정된 패턴
+NARROW_INDICATORS: list[str] = [
+    # 라이브러리별 함수/클래스(library-specific API)
+    "pandas.dataframe", "torch.nn", "tf.keras", "numpy.array",
+    "react.useeffect", "vue.computed", "angular.module",
+    "flutter build_runner", "riverpod", "bloc pattern",
+    "express.router", "fastapi.depends", "django.models",
+    "axum::router", "actix_web", "tokio::spawn",
+    # 버전 특정(version-specific) 패턴
+    "v3.2", "v4.0", "v2.1", "python 3.12", "python 3.11",
+    "node 18", "node 20", "dart 3", "flutter 3",
+    "react 18", "vue 3", "angular 17",
+    # CLI 플래그(tool-specific CLI flags)
+    "--frozen-lockfile", "--legacy-peer-deps", "--no-cache-dir",
+    "--delete-conflicting-outputs",
+]
+
+# 넓은 범위(broad scope) 지표 — 범용 개발 원칙/패턴
+BROAD_INDICATORS: list[str] = [
+    # 한국어
+    "함수 분리", "에러 처리", "테스트 작성", "코드 리뷰",
+    "네이밍", "추상화", "의존성 주입", "단일 책임",
+    "관심사 분리", "재사용", "가독성", "유지보수",
+    "디버깅", "로깅", "예외 처리", "입력 검증",
+    # 영어
+    "clean code", "error handling", "testing", "refactoring",
+    "naming", "abstraction", "dependency injection",
+    "single responsibility", "separation of concerns",
+    "reusability", "readability", "maintainability",
+    "debugging", "logging", "exception handling", "input validation",
+    "code review", "design pattern",
+]
+
+
+def classify_scope(body: str, name: str) -> str:
+    """내용의 범위(scope)를 broad/narrow로 분류한다.
+
+    본문과 이름을 합쳐 narrow/broad 지표 매칭 수를 비교한다.
+    narrow 매칭이 2개 이상이고 broad보다 많을 때만 "narrow" 판정.
+
+    Returns: "broad" or "narrow"
+    """
+    combined = f"{name} {body}".lower()
+
+    narrow_count = sum(1 for ind in NARROW_INDICATORS if ind in combined)
+    broad_count = sum(1 for ind in BROAD_INDICATORS if ind in combined)
+
+    if narrow_count >= 2 and narrow_count > broad_count:
+        return "narrow"
+    return "broad"

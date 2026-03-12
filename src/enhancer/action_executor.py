@@ -35,6 +35,7 @@ def apply_one(
         "refine_skill": _apply_refine_file,
         "refine_agent": _apply_refine_file,
         "add_rule": _apply_rule,
+        "reasoning_rule": _apply_rule,
     }
     handler = dispatch.get(action.action_type)
     if handler:
@@ -80,7 +81,7 @@ def resolve_target_path(
         return root / ".claude" / "skills" / f"{action.name}.md"
     if action.action_type in ("create_agent", "refine_agent"):
         return root / ".claude" / "agents" / f"{action.name}.md"
-    if action.action_type == "add_rule":
+    if action.action_type in ("add_rule", "reasoning_rule"):
         return root / "CLAUDE.md"
     return None
 

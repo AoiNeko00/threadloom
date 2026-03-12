@@ -1,6 +1,6 @@
 """자동 심사(auto-review) 모듈 테스트.
 
-hard reject, 기술 스택 필터, 품질 게이트, 중복 검사, 통합 시나리오를 검증한다.
+hard reject, 기술 스택 필터, 품질 게이트, 중복 검사, 범위 필터, 통합 시나리오를 검증한다.
 """
 
 import sys
@@ -13,6 +13,7 @@ _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_PROJECT_ROOT))
 
 from src.enhancer.reviewer import EnhancementReviewer
+from src.enhancer.reviewer_config import classify_scope
 
 
 # ------------------------------------------------------------------
@@ -597,3 +598,133 @@ class TestIntegration:
 
         assert len(result.approved) == 0
         assert len(result.rejected) == 0
+
+
+# ------------------------------------------------------------------
+# classify_scope 단위 테스트
+# ------------------------------------------------------------------
+
+class TestClassifyScope:
+    """classify_scope() 함수의 broad/narrow 분류를 검증한다."""
+
+    def test_classify_scope_broad(self):
+        """broad 지표(indicator)가 포함된 본문은 'broad'를 반환한다."""
+        body = (
+            "함수 분리와 에러 처리를 개선하는 범용 패턴입니다. "
+            "단일 책임 원칙을 준수하고 코드 리뷰 시 확인할 항목입니다."
+        )
+        assert classify_scope(body, "code_quality") == "broad"
+
+    def test_classify_scope_narrow(self):
+        """narrow 지표가 포함된 본문은 'narrow'를 반환한다."""
+        body = (
+            "pandas.dataframe의 apply 메서드와 torch.nn 레이어 설정, "
+            "tf.keras 모델 컴파일 시 --no-cache-dir 플래그를 사용한다."
+        )
+        assert classify_scope(body, "ml_pipeline") == "narrow"
+
+    def test_classify_scope_default_broad(self):
+        """지표가 전혀 없는 본문은 기본값 'broad'를 반환한다."""
+        body = "이것은 특별한 키워드가 없는 일반 텍스트입니다."
+        assert classify_scope(body, "generic") == "broad"
+
+
+# ------------------------------------------------------------------
+# _check_scope 범위 필터(scope filter) 테스트
+# ------------------------------------------------------------------
+
+class TestCheckScope:
+    """reviewer._check_scope()의 범위 기반 거부/통과를 검증한다."""
+
+    @pytest.fixture(autouse=True)
+    def _patch_dirs(self, tmp_path, monkeypatch):
+        """reviewer 경로를 tmp_path로 패치한다."""
+        monkeypatch.setattr(
+            "src.enhancer.reviewer._PENDING_DIR", tmp_path,
+        )
+        monkeypatch.setattr(
+            "src.enhancer.reviewer._REJECTED_DIR", tmp_path / "rejected",
+        )
+
+    def test_check_scope_rejects_narrow_rule(self, tmp_path):
+        """add_rule에 narrow 내용이면 거부되어야 한다."""
+        path = _write_pending(
+            tmp_path,
+            name="pandas_tips",
+            action_type="add_rule",
+            body=(
+                "# pandas 최적화 규칙\n\n"
+                "pandas.dataframe에서 apply 대신 vectorize를 사용하고 "
+                "numpy.array로 변환 후 torch.nn 레이어에 전달한다. "
+                "tf.keras 모델 학습 시 --no-cache-dir 플래그를 설정한다. "
+                "python 3.12의 새로운 기능을 활용하여 성능을 개선한다."
+            ),
+        )
+        reviewer = EnhancementReviewer(_make_mock_config(str(tmp_path)))
+        result = reviewer.review([path])
+
+        assert len(result.approved) == 0
+        assert any("scope_filter" in r[1] for r in result.rejected)
+
+    def test_check_scope_allows_broad_rule(self, tmp_path):
+        """add_rule에 broad 내용이면 통과해야 한다."""
+        path = _write_pending(
+            tmp_path,
+            name="clean_code_rule",
+            action_type="add_rule",
+            body=(
+                "# 클린 코드 규칙\n\n"
+                "함수 분리 원칙을 준수하고 에러 처리를 강화한다. "
+                "테스트 작성 시 단일 책임 원칙을 지키며 "
+                "코드 리뷰에서 네이밍과 가독성을 확인한다. "
+                "의존성 주입으로 관심사 분리를 달성한다."
+            ),
+        )
+        reviewer = EnhancementReviewer(_make_mock_config(str(tmp_path)))
+        result = reviewer.review([path])
+
+        assert len(result.approved) == 1
+
+    def test_check_scope_allows_narrow_skill(self, tmp_path):
+        """create_skill은 narrow 내용이어도 scope 필터를 통과해야 한다."""
+        path = _write_pending(
+            tmp_path,
+            name="pandas_skill",
+            action_type="create_skill",
+            body=(
+                "# pandas 데이터 처리 스킬\n\n"
+                "pandas.dataframe에서 apply 대신 vectorize를 사용하고 "
+                "numpy.array로 변환 후 torch.nn 레이어에 전달한다. "
+                "tf.keras 모델 학습 시 --no-cache-dir 플래그를 설정한다. "
+                "python 3.12의 새로운 기능을 활용하여 성능을 개선한다."
+            ),
+        )
+        # Python 프로젝트로 시뮬레이션(simulation)하여 스택 불일치 필터를 통과시킴
+        (tmp_path / "requirements.txt").write_text("pandas\n", encoding="utf-8")
+
+        reviewer = EnhancementReviewer(_make_mock_config(str(tmp_path)))
+        result = reviewer.review([path])
+
+        # scope_filter 사유로 거부되지 않아야 함
+        scope_rejects = [r for r in result.rejected if "scope_filter" in r[1]]
+        assert len(scope_rejects) == 0
+
+    def test_check_scope_rejects_narrow_reasoning_rule(self, tmp_path):
+        """reasoning_rule에 narrow 내용이면 거부되어야 한다."""
+        path = _write_pending(
+            tmp_path,
+            name="react_hooks_reasoning",
+            action_type="reasoning_rule",
+            body=(
+                "# React Hooks 추론 규칙\n\n"
+                "react.useeffect 의존성 배열에서 vue.computed와 "
+                "angular.module 패턴을 참고하여 최적화한다. "
+                "express.router 미들웨어 체인과 --legacy-peer-deps "
+                "플래그 설정으로 호환성을 확보한다."
+            ),
+        )
+        reviewer = EnhancementReviewer(_make_mock_config(str(tmp_path)))
+        result = reviewer.review([path])
+
+        assert len(result.approved) == 0
+        assert any("scope_filter" in r[1] for r in result.rejected)

@@ -59,3 +59,12 @@ def set_frontmatter_field(
     else:
         fm = fm.rstrip() + f"\n{key}: {value}"
     return f"---\n{fm}\n---{text[match.end():]}"
+
+
+def normalize_name(raw: str) -> str:
+    """헤더/이름을 snake_case 정규화(normalize)한다.
+
+    영문 소문자, 숫자, 한글만 유지하고 나머지는 언더스코어로 변환한다.
+    """
+    lowered = raw.strip().lower()
+    return re.sub(r"[^a-z0-9가-힣]+", "_", lowered).strip("_")

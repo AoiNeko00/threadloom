@@ -122,6 +122,18 @@ _MESSAGES: dict[str, dict[str, str]] = {
         "ko": "(사유 없음)",
         "en": "(no reason)",
     },
+    "status.enhancement_map_title": {
+        "ko": "강화 분포 맵",
+        "en": "Enhancement Map",
+    },
+    "status.col_domain": {
+        "ko": "분야",
+        "en": "Domain",
+    },
+    "status.col_total": {
+        "ko": "합계",
+        "en": "Total",
+    },
 
     # ── health_check columns ──
     "health.col_item": {

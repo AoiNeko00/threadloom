@@ -276,3 +276,29 @@ def test_insert_rule_with_end_marker():
     result = _insert_rule(text, "### Added")
     assert result.index("### Added") < result.index("<!-- threadloom-rules-end -->")
     assert "### Old" in result
+
+
+# ------------------------------------------------------------------
+# apply_one — reasoning_rule
+# ------------------------------------------------------------------
+
+def test_apply_reasoning_rule(target_project, tmp_path):
+    """reasoning_rule은 _apply_rule로 디스패치되어 CLAUDE.md에 기록되어야 한다."""
+    action = _make_action(
+        tmp_path, "reasoning_rule", "think_before_code",
+        "### Think Before Code\n\n코드 작성 전 설계를 먼저 검토한다.",
+    )
+    apply_one(action, target_project, {}, target_project)
+
+    claude_md = target_project / "CLAUDE.md"
+    assert claude_md.exists()
+    text = claude_md.read_text()
+    assert "## threadloom-rules" in text
+    assert "### Think Before Code" in text
+
+
+def test_resolve_target_path_reasoning_rule(tmp_path):
+    """reasoning_rule은 CLAUDE.md 경로를 반환한다."""
+    action = _make_action(tmp_path, action_type="reasoning_rule", name="logic1")
+    result = resolve_target_path(action, {}, tmp_path)
+    assert result == tmp_path / "CLAUDE.md"

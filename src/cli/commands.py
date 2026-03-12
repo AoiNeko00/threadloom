@@ -10,13 +10,17 @@ from rich.console import Console
 from rich.table import Table
 
 from src.utils.i18n import t
+from src.utils.logger import get_logger
 from src.utils.paths import REJECTED_DIR
+
+_logger = get_logger("commands")
 
 from src.cli.status_display import (
     count_applied,
     count_pending,
     count_rejected,
     extract_rejected_meta,
+    print_enhancement_map,
     print_pending_list,
 )
 
@@ -74,6 +78,14 @@ def cmd_status() -> None:
     _console.print(t("cmd.pending_count", n=pending))
     print_pending_list()
     _console.print(t("cmd.applied_count", n=applied))
+
+    # 강화 맵(enhancement map) 출력 — Config 로드 실패 시 건너뜀
+    try:
+        from src.config import Config
+        config = Config()
+        print_enhancement_map(Path(config.target_project_path))
+    except Exception:
+        _logger.debug("enhancement map 출력 건너뜀")
     _console.print()
 
 

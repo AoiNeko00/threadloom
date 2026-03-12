@@ -39,6 +39,7 @@ For each post, analyze the following:
   - skill: repeatable single-task pattern (e.g., "Playwright session save/restore", "test automation")
   - agent: multi-step specialized role definition (e.g., "security code reviewer", "performance optimizer")
   - rule: coding rule, convention, or restriction (e.g., "no bare except", "max 20 lines per function")
+  - reasoning_rule: thinking process improvement or decision-making heuristic (e.g., "when debugging, check logs first", "before refactoring, write characterization tests")
   - none: informational content that doesn't fit any of the above
 - Proposed name (snake_case)
 - Reasoning
@@ -68,7 +69,7 @@ enhance_candidates: (enhancement candidate count)
 - **Summary**: (3 lines or less)
 - **Relevance**: (0.0~1.0)
 - **Actionable**: (true/false)
-- **Enhancement type**: (skill/agent/rule/none)
+- **Enhancement type**: (skill/agent/rule/reasoning_rule/none)
 - **Proposed name**: (snake_case name)
 - **Reasoning**: (justification)
 
@@ -177,7 +178,13 @@ def _enhance_file_formats() -> str:
    <!-- threadloom: (date) | source: (post ID) -->
    (rule content)
 
-6. You MUST check for **conflicts** with existing rules:
+6. Reasoning rules (thinking process improvements) use the same format as rules but with a type comment:
+   ### (reasoning rule name)
+   <!-- threadloom: (date) | source: (post ID) -->
+   <!-- type: reasoning_rule -->
+   (reasoning rule content — decision-making heuristic or thinking process improvement)
+
+7. You MUST check for **conflicts** with existing rules:
    - If semantically conflicting with an existing rule, mark as `conflict` + explain the conflict
    - Do NOT generate conflicting items; record the conflict reason only
 

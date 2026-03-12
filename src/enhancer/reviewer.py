@@ -13,9 +13,14 @@ from src.enhancer.reviewer_config import (
     META_RESPONSE_PATTERNS,
     STRONG_EXPRESSIONS,
     WEAK_EXPRESSIONS,
+    classify_scope,
 )
 from src.enhancer.stack_detector import detect_stacks, extract_mentioned_stacks
-from src.utils.frontmatter import parse_frontmatter, set_frontmatter_field
+from src.utils.frontmatter import (
+    normalize_name,
+    parse_frontmatter,
+    set_frontmatter_field,
+)
 from src.utils.i18n import t
 from src.utils.logger import get_logger
 from src.utils.paths import PENDING_DIR, REJECTED_DIR
@@ -135,6 +140,11 @@ class EnhancementReviewer:
         if reason:
             return reason
 
+        # 범위 필터(scope filter) — 규칙은 broad만 허용
+        reason = self._check_scope(meta, body)
+        if reason:
+            return reason
+
         # 중복 검사(dedup) — 기존 파일 대비
         reason = self._check_duplicate(meta, existing_names)
         if reason:
@@ -246,6 +256,28 @@ class EnhancementReviewer:
         return score
 
     # ------------------------------------------------------------------
+    # 내부: 범위 필터(scope filter)
+    # ------------------------------------------------------------------
+
+    def _check_scope(self, meta: dict, body: str) -> str | None:
+        """add_rule 액션의 범위(scope)를 검사한다.
+
+        좁은 범위(narrow) 내용은 규칙이 아닌 스킬로 생성해야 한다.
+        """
+        action_type = meta.get("action_type", "")
+        if action_type not in ("add_rule", "reasoning_rule"):
+            return None
+
+        name = meta.get("name", "")
+        scope = classify_scope(body, name)
+        if scope == "narrow":
+            return (
+                "scope_filter: 좁은 범위(narrow) 내용은 "
+                "규칙(rule)이 아닌 스킬(skill)로 생성 권장"
+            )
+        return None
+
+    # ------------------------------------------------------------------
     # 내부: 중복 검사(dedup)
     # ------------------------------------------------------------------
 
@@ -291,9 +323,7 @@ class EnhancementReviewer:
             return
         # ### 규칙이름 패턴으로 추출
         for match in re.finditer(r"###\s+(.+)", text):
-            rule_name = match.group(1).strip().lower()
-            # snake_case 변환
-            normalized = re.sub(r"[^a-z0-9가-힣]+", "_", rule_name).strip("_")
+            normalized = normalize_name(match.group(1))
             if normalized:
                 names.add(normalized)
 
