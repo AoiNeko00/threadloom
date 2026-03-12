@@ -1,0 +1,33 @@
+# Threads UI 셀렉터 맵(Selector Map)
+# Threads UI 변경 시 이 파일만 수정하면 됩니다
+# Python 코드 수정 없이 셀렉터만 교체 가능
+
+# 포스트 컨테이너(post container) — 우선순위 순서대로 시도
+post_containers:
+  - "[data-pressable-container]"
+  - "[data-testid='post-container']"
+  - "article"
+
+# 작성자(author) 링크
+author_link: "a[href*='/@']"
+
+# 포스트 URL 링크
+post_link: "a[href*='/post/']"
+
+# 미디어(media) 요소
+media:
+  image: "img[src]"
+  video: "video source[src]"
+
+# UI 노이즈(noise) 토큰 — 본문 정제 시 제거
+noise_tokens:
+  - "Translate"
+  - "Like"
+  - "Reply"
+  - "Repost"
+  - "Share"
+  - "Follow"
+  - "Edited"
+  - "Author"
+  - "·"
+  - "Loading..."

@@ -1,0 +1,62 @@
+# threadloom 설정 템플릿
+# cp config.example.yaml config.yaml 후 값을 채우세요
+# config.yaml은 절대 Git에 올리지 마세요
+
+# ★ AI 강화 대상 프로젝트 (필수)
+target_project:
+  path: "/Users/YOUR_USERNAME/your-project"  # .claude/ 가 있는 프로젝트 루트
+  enhance:
+    skills: true       # .claude/skills/ 자동 생성
+    agents: true       # .claude/agents/ 자동 생성
+    rules: true        # CLAUDE.md 규칙 추가
+  auto_apply: false    # true: 즉시 적용, false: data/pending/에 저장 후 --review로 승인
+
+# 다중 프로젝트 라우팅 (선택, 여러 프로젝트에 강화를 분배할 때)
+# 설정하지 않으면 target_project.path 하나만 사용
+target_projects:
+  # - name: "my-flutter-app"
+  #   path: "/Users/YOUR_USERNAME/projects/flutter-app"
+  #   tags: ["Flutter", "모바일"]
+  # - name: "api-server"
+  #   path: "/Users/YOUR_USERNAME/projects/api-server"
+  #   tags: ["Rust", "API", "백엔드"]
+
+# Obsidian 아카이빙 (선택)
+obsidian:
+  enabled: true
+  vault_path: "/Users/YOUR_USERNAME/Documents/Obsidian"
+  folders:
+    daily: "threadloom/daily"
+    by_tag: "threadloom/by-tag"
+    archive: "threadloom/archive"
+    reports: "threadloom/reports"
+
+threads:
+  account: ""                # Threads 계정 ID (예: "myaccount"). 여러 계정 전환 시 사용
+
+ai:
+  provider: "claude_code"    # claude_code | codex | gemini
+  language: "ko"             # 요약 및 태그 언어
+
+link_fetching:
+  enabled: true                   # 포스트 내 외부 링크 크롤링 활성화
+  max_links_per_post: 3           # 포스트당 최대 링크 수
+  timeout: 10                     # 링크 크롤링 타임아웃(초)
+
+reviewer:
+  min_relevance_score: 0.7      # 최소 관련성(relevance) 점수
+  max_pending_items: 20         # 한 번에 최대 pending 항목 수
+  reject_generic_advice: true   # 일반적 조언 자동 거부
+
+classification:
+  min_relevance_score: 0.7   # 유용성 점수 임계값 (0.0~1.0)
+  max_posts_per_batch: 50    # 배치당 최대 포스트 수 (초과 시 자동 분할)
+  max_chars_per_batch: 80000 # 배치당 최대 글자 수 (이중 안전장치)
+  tags:
+    - AI/ML
+    - 개발도구
+    - 프로덕트
+    - 비즈니스
+    - 디자인
+    - 생산성
+    - 기타
