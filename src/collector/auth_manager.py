@@ -12,15 +12,15 @@ from playwright.sync_api import BrowserContext, sync_playwright
 
 from src.utils.i18n import t
 from src.utils.logger import get_logger
+from src.utils.paths import PROJECT_ROOT
 
 # 상수(constants)
 _SERVICE_NAME: str = "threadloom"
 _KEYRING_KEY: str = "session_path"
 _THREADS_URL: str = "https://www.threads.com"
 
-# 프로젝트 루트(project root)
-_PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent.parent
-_AUTH_DIR: Path = _PROJECT_ROOT / "auth"
+# 중앙 경로(centralized path) 모듈에서 가져옴
+_AUTH_DIR: Path = PROJECT_ROOT / "auth"
 _SESSION_FILE: Path = _AUTH_DIR / "session.json"
 
 _logger = get_logger("collector.auth")
@@ -148,6 +148,7 @@ class AuthManager:
             json.dumps(cookies, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
+        self._session_file.chmod(0o600)
         keyring.set_password(
             _SERVICE_NAME, self._keyring_key, str(self._session_file),
         )

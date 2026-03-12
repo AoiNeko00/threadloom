@@ -9,10 +9,10 @@ from pathlib import Path
 
 from src.utils.i18n import t
 from src.utils.logger import get_logger
+from src.utils.paths import DATA_DIR
 
-# 프로젝트 루트(project root) 경로
-_PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent.parent
-LOCK_FILE: Path = _PROJECT_ROOT / "data" / ".lock"
+# 중앙 경로(centralized path) 모듈에서 가져옴
+LOCK_FILE: Path = DATA_DIR / ".lock"
 
 _logger = get_logger("process_lock")
 

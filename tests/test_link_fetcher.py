@@ -16,6 +16,7 @@ sys.path.insert(0, str(_PROJECT_ROOT))
 from src.collector.link_fetcher import (
     _extract_main_text,
     _extract_title,
+    _is_safe_url,
     fetch_link_text,
     fetch_links_for_posts,
 )
@@ -58,15 +59,18 @@ def sample_post() -> ThreadPost:
 # fetch_link_text 정상 케이스
 # ------------------------------------------------------------------
 
-@patch("src.collector.link_fetcher.requests.get")
-def test_fetch_link_text_success(mock_get, sample_html):
+@patch("src.collector.link_fetcher._is_safe_url", return_value=True)
+@patch("src.collector.link_fetcher.requests.Session")
+def test_fetch_link_text_success(mock_session_cls, mock_safe, sample_html):
     """정상 HTML 응답 시 title과 text를 추출한다."""
     mock_resp = MagicMock()
     mock_resp.status_code = 200
     mock_resp.text = sample_html
     mock_resp.headers = {"Content-Type": "text/html; charset=utf-8"}
     mock_resp.raise_for_status = MagicMock()
-    mock_get.return_value = mock_resp
+    mock_session = MagicMock()
+    mock_session.get.return_value = mock_resp
+    mock_session_cls.return_value = mock_session
 
     result = fetch_link_text("https://example.com/article")
     assert result is not None
@@ -79,11 +83,14 @@ def test_fetch_link_text_success(mock_get, sample_html):
 # fetch_link_text 타임아웃(timeout) 케이스
 # ------------------------------------------------------------------
 
-@patch("src.collector.link_fetcher.requests.get")
-def test_fetch_link_text_timeout(mock_get):
+@patch("src.collector.link_fetcher._is_safe_url", return_value=True)
+@patch("src.collector.link_fetcher.requests.Session")
+def test_fetch_link_text_timeout(mock_session_cls, mock_safe):
     """타임아웃 발생 시 None을 반환한다."""
     import requests
-    mock_get.side_effect = requests.Timeout("timeout")
+    mock_session = MagicMock()
+    mock_session.get.side_effect = requests.Timeout("timeout")
+    mock_session_cls.return_value = mock_session
 
     result = fetch_link_text("https://example.com/slow", timeout=1)
     assert result is None
@@ -93,29 +100,73 @@ def test_fetch_link_text_timeout(mock_get):
 # fetch_link_text 에러 케이스
 # ------------------------------------------------------------------
 
-@patch("src.collector.link_fetcher.requests.get")
-def test_fetch_link_text_http_error(mock_get):
+@patch("src.collector.link_fetcher._is_safe_url", return_value=True)
+@patch("src.collector.link_fetcher.requests.Session")
+def test_fetch_link_text_http_error(mock_session_cls, mock_safe):
     """HTTP 에러(404 등) 시 None을 반환한다."""
     import requests
     mock_resp = MagicMock()
     mock_resp.raise_for_status.side_effect = requests.HTTPError("404")
-    mock_get.return_value = mock_resp
+    mock_session = MagicMock()
+    mock_session.get.return_value = mock_resp
+    mock_session_cls.return_value = mock_session
 
     result = fetch_link_text("https://example.com/missing")
     assert result is None
 
 
-@patch("src.collector.link_fetcher.requests.get")
-def test_fetch_link_text_non_html(mock_get):
+@patch("src.collector.link_fetcher._is_safe_url", return_value=True)
+@patch("src.collector.link_fetcher.requests.Session")
+def test_fetch_link_text_non_html(mock_session_cls, mock_safe):
     """HTML이 아닌 Content-Type이면 None을 반환한다."""
     mock_resp = MagicMock()
     mock_resp.status_code = 200
     mock_resp.headers = {"Content-Type": "application/pdf"}
     mock_resp.raise_for_status = MagicMock()
-    mock_get.return_value = mock_resp
+    mock_session = MagicMock()
+    mock_session.get.return_value = mock_resp
+    mock_session_cls.return_value = mock_session
 
     result = fetch_link_text("https://example.com/file.pdf")
     assert result is None
+
+
+# ------------------------------------------------------------------
+# SSRF 방어 테스트
+# ------------------------------------------------------------------
+
+
+@patch("src.collector.link_fetcher.socket.getaddrinfo",
+       return_value=[(None, None, None, None, ("127.0.0.1", 0))])
+def test_ssrf_blocks_loopback(mock_dns):
+    """loopback(127.0.0.1) URL은 차단되어야 한다."""
+    assert _is_safe_url("http://localhost/admin") is False
+
+
+@patch("src.collector.link_fetcher.socket.getaddrinfo",
+       return_value=[(None, None, None, None, ("192.168.1.1", 0))])
+def test_ssrf_blocks_private_ip(mock_dns):
+    """private IP(192.168.x.x) URL은 차단되어야 한다."""
+    assert _is_safe_url("http://192.168.1.1/") is False
+
+
+@patch("src.collector.link_fetcher.socket.getaddrinfo",
+       return_value=[(None, None, None, None, ("169.254.169.254", 0))])
+def test_ssrf_blocks_aws_metadata(mock_dns):
+    """AWS metadata endpoint는 차단되어야 한다."""
+    assert _is_safe_url("http://169.254.169.254/latest/meta-data/") is False
+
+
+@patch("src.collector.link_fetcher.socket.getaddrinfo",
+       return_value=[(None, None, None, None, ("93.184.216.34", 0))])
+def test_ssrf_allows_public_ip(mock_dns):
+    """공개(public) IP URL은 허용되어야 한다."""
+    assert _is_safe_url("https://example.com/page") is True
+
+
+def test_ssrf_blocks_ftp_scheme():
+    """http/https 외 스킴(ftp 등)은 차단되어야 한다."""
+    assert _is_safe_url("ftp://files.example.com/data") is False
 
 
 # ------------------------------------------------------------------

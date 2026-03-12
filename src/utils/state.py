@@ -8,9 +8,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-# 프로젝트 루트 기준 상태 파일(state file) 경로
-_PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent.parent
-_DATA_DIR: Path = _PROJECT_ROOT / "data"
+from src.utils.paths import DATA_DIR
+
+# 중앙 경로(centralized path) 모듈에서 가져옴
+_DATA_DIR: Path = DATA_DIR
 _STATE_FILE: Path = _DATA_DIR / "state.json"
 
 

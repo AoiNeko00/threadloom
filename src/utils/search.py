@@ -9,14 +9,14 @@ from rich.table import Table
 from src.utils.frontmatter import parse_frontmatter
 from src.utils.i18n import t
 from src.utils.logger import get_logger
+from src.utils.paths import ANALYSIS_DIR, RAW_DIR
 
 _logger = get_logger("search")
 _console = Console()
 
-# 프로젝트 루트(project root)
-_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-_RAW_DIR = _PROJECT_ROOT / "data" / "raw"
-_ANALYSIS_DIR = _PROJECT_ROOT / "data" / "analysis"
+# 중앙 경로(centralized path) 모듈에서 가져옴
+_RAW_DIR = RAW_DIR
+_ANALYSIS_DIR = ANALYSIS_DIR
 
 
 @dataclass

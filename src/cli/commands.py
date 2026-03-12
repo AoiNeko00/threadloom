@@ -10,6 +10,7 @@ from rich.console import Console
 from rich.table import Table
 
 from src.utils.i18n import t
+from src.utils.paths import REJECTED_DIR
 
 from src.cli.status_display import (
     count_applied,
@@ -19,9 +20,8 @@ from src.cli.status_display import (
     print_pending_list,
 )
 
-# 프로젝트 루트(project root) 경로
-_PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent.parent
-_REJECTED_DIR: Path = _PROJECT_ROOT / "data" / "rejected"
+# 중앙 경로(centralized path) 모듈에서 가져옴
+_REJECTED_DIR: Path = REJECTED_DIR
 
 _console = Console()
 

@@ -20,11 +20,11 @@ from src.pipeline.pipeline_output import (
 from src.utils.batch_splitter import split_raw_file
 from src.utils.i18n import t
 from src.utils.logger import get_logger
+from src.utils.paths import ANALYSIS_DIR, RAW_DIR
 
-# 프로젝트 루트(project root) 경로
-_PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent.parent
-_RAW_DIR: Path = _PROJECT_ROOT / "data" / "raw"
-_ANALYSIS_DIR: Path = _PROJECT_ROOT / "data" / "analysis"
+# 중앙 경로(centralized path) 모듈에서 가져옴
+_RAW_DIR: Path = RAW_DIR
+_ANALYSIS_DIR: Path = ANALYSIS_DIR
 
 _logger = get_logger("pipeline_runner")
 _console = Console()

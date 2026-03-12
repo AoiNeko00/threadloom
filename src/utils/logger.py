@@ -13,11 +13,11 @@ from pathlib import Path
 from rich.console import Console
 from rich.logging import RichHandler
 
-# 프로젝트 루트(project root) 경로
-_PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent.parent
+from src.utils.paths import PROJECT_ROOT
 
+# 중앙 경로(centralized path) 모듈에서 가져옴
 # 로그 디렉토리 자동 생성
-_LOG_DIR: Path = _PROJECT_ROOT / "logs"
+_LOG_DIR: Path = PROJECT_ROOT / "logs"
 _LOG_DIR.mkdir(exist_ok=True)
 
 _LOG_FILE: Path = _LOG_DIR / "threadloom.log"

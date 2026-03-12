@@ -10,11 +10,12 @@ from pathlib import Path
 from src.config import Config
 from src.utils.i18n import t
 from src.utils.logger import get_logger
+from src.utils.paths import PROJECT_ROOT, RAW_DIR
 from src.utils.post_block_parser import parse_post_blocks, parse_tag_list
 
-# 프로젝트 루트(project root) → data/raw/ 경로 도출
-_PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent.parent
-_RAW_DIR: Path = _PROJECT_ROOT / "data" / "raw"
+# 중앙 경로(centralized path) 모듈에서 가져옴
+_PROJECT_ROOT: Path = PROJECT_ROOT
+_RAW_DIR: Path = RAW_DIR
 
 _logger = get_logger("writer.obsidian")
 

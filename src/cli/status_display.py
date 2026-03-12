@@ -10,12 +10,12 @@ from rich.console import Console
 
 from src.utils.frontmatter import parse_frontmatter
 from src.utils.i18n import t
+from src.utils.paths import ENHANCE_LOG, PENDING_DIR, REJECTED_DIR
 
-# 프로젝트 루트(project root) 경로
-_PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent.parent
-_PENDING_DIR: Path = _PROJECT_ROOT / "data" / "pending"
-_REJECTED_DIR: Path = _PROJECT_ROOT / "data" / "rejected"
-_ENHANCE_LOG: Path = _PROJECT_ROOT / "data" / "enhance_log.json"
+# 중앙 경로(centralized path) 모듈에서 가져옴
+_PENDING_DIR: Path = PENDING_DIR
+_REJECTED_DIR: Path = REJECTED_DIR
+_ENHANCE_LOG: Path = ENHANCE_LOG
 
 _console = Console()
 

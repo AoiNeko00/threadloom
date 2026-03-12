@@ -41,13 +41,8 @@ def _make_config(target_path: str, auto_apply: bool = False) -> MagicMock:
     return config
 
 
-@pytest.fixture
-def target_project(tmp_path) -> Path:
-    """테스트용 대상 프로젝트 디렉토리."""
-    project = tmp_path / "test_project"
-    (project / ".claude" / "skills").mkdir(parents=True)
-    (project / ".claude" / "agents").mkdir(parents=True)
-    return project
+
+# target_project fixture는 conftest.py에서 자동 주입(inject)됨
 
 
 @pytest.fixture

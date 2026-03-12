@@ -34,10 +34,10 @@ from src.collector.raw_writer import format_post_md, write_raw_md
 from src.collector.reply_collector import should_fetch_replies
 from src.utils.i18n import t
 from src.utils.logger import get_logger
+from src.utils.paths import RAW_DIR
 
-# 프로젝트 루트(project root)
-_PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent.parent
-_RAW_DIR: Path = _PROJECT_ROOT / "data" / "raw"
+# 중앙 경로(centralized path) 모듈에서 가져옴
+_RAW_DIR: Path = RAW_DIR
 
 _THREADS_URL: str = "https://www.threads.com"
 _SCROLL_DELAY_MIN: float = 1.0

@@ -18,13 +18,13 @@ from src.enhancer.stack_detector import detect_stacks, extract_mentioned_stacks
 from src.utils.frontmatter import parse_frontmatter, set_frontmatter_field
 from src.utils.i18n import t
 from src.utils.logger import get_logger
+from src.utils.paths import PENDING_DIR, REJECTED_DIR
 
 _logger = get_logger("reviewer")
 
-# 프로젝트 루트(project root) 경로
-_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-_PENDING_DIR = _PROJECT_ROOT / "data" / "pending"
-_REJECTED_DIR = _PROJECT_ROOT / "data" / "rejected"
+# 중앙 경로(centralized path) 모듈에서 가져옴
+_PENDING_DIR = PENDING_DIR
+_REJECTED_DIR = REJECTED_DIR
 
 
 @dataclass

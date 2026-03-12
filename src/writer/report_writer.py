@@ -10,6 +10,7 @@ from pathlib import Path
 from src.config import Config
 from src.utils.i18n import t
 from src.utils.logger import get_logger
+from src.utils.paths import DATA_DIR
 from src.utils.post_block_parser import parse_post_blocks
 from src.utils.state import get_total_collected
 
@@ -237,8 +238,7 @@ class ReportWriter:
             )
         else:
             # Obsidian 미사용 시 프로젝트 data/ 하위에 저장
-            project_root = Path(__file__).resolve().parent.parent.parent
-            report_dir = project_root / "data" / "reports"
+            report_dir = DATA_DIR / "reports"
 
         report_dir.mkdir(parents=True, exist_ok=True)
         return report_dir / f"{today.isoformat()}-report.md"

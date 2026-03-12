@@ -11,12 +11,12 @@ from src.ai_adapter.base import BaseAIAdapter
 from src.processor.context_builder import ContextBuilder
 from src.utils.i18n import t
 from src.utils.logger import get_logger
+from src.utils.paths import ANALYSIS_DIR
 
 _logger = get_logger("analyzer")
 
-# 프로젝트 루트(project root) 기준 data 경로
-_PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent.parent
-_ANALYSIS_DIR: Path = _PROJECT_ROOT / "data" / "analysis"
+# 중앙 경로(centralized path) 모듈에서 가져옴
+_ANALYSIS_DIR: Path = ANALYSIS_DIR
 
 # 분석 결과에 반드시 포함되어야 하는 섹션(section) 패턴
 # AI 응답 언어에 따라 영어/한국어 모두 허용

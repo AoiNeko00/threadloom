@@ -32,6 +32,10 @@ build/
 .pytest_cache/
 .coverage
 
+# SSH keys
+github_aoineko00
+github_aoineko00.pub
+
 # OS
 .DS_Store
 Thumbs.db

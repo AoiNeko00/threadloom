@@ -26,12 +26,12 @@ from src.enhancer.pending_manager import (
 from src.enhancer.pending_parser import parse_pending_file as _pp_parse
 from src.utils.i18n import t
 from src.utils.logger import get_logger
+from src.utils.paths import PENDING_DIR
 
 _logger = get_logger("applier")
 
-# 프로젝트 루트(project root) 경로
-_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-_PENDING_DIR = _PROJECT_ROOT / "data" / "pending"
+# 중앙 경로(centralized path) 모듈에서 가져옴
+_PENDING_DIR = PENDING_DIR
 
 
 class Applier:
@@ -133,21 +133,15 @@ class Applier:
             backup_paths, self._project_map, self._target_root,
         )
 
-        for action in approved:
-            _exec_apply_one(
-                action, self._target_root,
-                self._project_map, self._target_root,
-            )
-            _bk_log(action, "applied")
-            _pm_remove(action)
-            _logger.info(
-                t("enhancer.applied",
-                  action_type=action.action_type, name=action.name),
-            )
+        applied, failed = self._apply_actions(approved)
 
         _logger.info(
-            t("enhancer.apply_done", n=len(approved), backup=backup_dir),
+            t("enhancer.apply_done", n=applied, backup=backup_dir),
         )
+        if failed:
+            _logger.warning(
+                t("enhancer.partial_fail", n=failed),
+            )
 
     def reject(self, rejected: list[PendingAction]) -> None:
         """거절된 항목을 data/rejected/로 이동(move)한다."""
@@ -187,6 +181,39 @@ class Applier:
             self._project_map, self._target_root,
         )
 
+    def _apply_actions(
+        self, actions: list[PendingAction],
+    ) -> tuple[int, int]:
+        """액션 리스트를 순회하며 개별 실패(failure)를 허용한다.
+
+        Returns:
+            (성공 건수, 실패 건수)
+        """
+        applied = 0
+        failed = 0
+        for action in actions:
+            try:
+                _exec_apply_one(
+                    action, self._target_root,
+                    self._project_map, self._target_root,
+                )
+                _bk_log(action, "applied")
+                _pm_remove(action)
+                applied += 1
+                _logger.info(
+                    t("enhancer.applied",
+                      action_type=action.action_type, name=action.name),
+                )
+            except Exception as exc:
+                _bk_log(action, f"failed: {type(exc).__name__}")
+                failed += 1
+                _logger.error(
+                    t("enhancer.apply_error",
+                      action_type=action.action_type, name=action.name),
+                    exc_info=True,
+                )
+        return applied, failed
+
     def _auto_apply(self, actions: list[PendingAction]) -> None:
         """auto_apply=true 시 전체 항목을 즉시 적용한다."""
         backup_paths = _bk_collect(
@@ -197,15 +224,13 @@ class Applier:
         )
         _logger.info(t("enhancer.backup_done", dir=backup_dir))
 
-        for action in actions:
-            _exec_apply_one(
-                action, self._target_root,
-                self._project_map, self._target_root,
-            )
-            _bk_log(action, "applied")
-            _pm_remove(action)
+        applied, failed = self._apply_actions(actions)
 
-        _logger.info(t("enhancer.auto_apply_done", n=len(actions)))
+        _logger.info(t("enhancer.auto_apply_done", n=applied))
+        if failed:
+            _logger.warning(
+                t("enhancer.partial_fail", n=failed),
+            )
 
     # ------------------------------------------------------------------
     # 내부: 대화형 검토 (interactive review)

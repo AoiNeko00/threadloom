@@ -14,12 +14,12 @@ from src.enhancer.response_parser import parse_response
 from src.processor.context_builder import ContextBuilder
 from src.utils.i18n import t
 from src.utils.logger import get_logger
+from src.utils.paths import PENDING_DIR
 
 _logger = get_logger("generator")
 
-# 프로젝트 루트(project root) 경로
-_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-_PENDING_DIR = _PROJECT_ROOT / "data" / "pending"
+# 중앙 경로(centralized path) 모듈에서 가져옴
+_PENDING_DIR = PENDING_DIR
 
 
 class EnhancementGenerator:

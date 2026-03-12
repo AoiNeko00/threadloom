@@ -12,13 +12,13 @@ from src.enhancer.action_executor import resolve_target_path
 from src.enhancer.models import PendingAction
 from src.utils.i18n import t
 from src.utils.logger import get_logger
+from src.utils.paths import BACKUPS_DIR, ENHANCE_LOG
 
 _logger = get_logger("backup_manager")
 
-# 프로젝트 루트(project root) 경로
-_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-_BACKUPS_DIR = _PROJECT_ROOT / "data" / "backups"
-_ENHANCE_LOG = _PROJECT_ROOT / "data" / "enhance_log.json"
+# 중앙 경로(centralized path) 모듈에서 가져옴
+_BACKUPS_DIR = BACKUPS_DIR
+_ENHANCE_LOG = ENHANCE_LOG
 
 
 def collect_backup_targets(

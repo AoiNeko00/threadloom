@@ -3,6 +3,8 @@
 포스트 본문에 포함된 외부 URL의 제목과 본문 텍스트를 추출한다.
 """
 
+import ipaddress
+import socket
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from urllib.parse import urlparse
 
@@ -36,21 +38,48 @@ _USER_AGENT: str = (
 )
 
 
+def _is_safe_url(url: str) -> bool:
+    """SSRF 방어: private/reserved IP 및 위험 스킴(scheme)을 차단한다."""
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        return False
+    hostname = parsed.hostname
+    if not hostname:
+        return False
+    try:
+        resolved = socket.getaddrinfo(hostname, None, socket.AF_UNSPEC)
+    except socket.gaierror:
+        return False
+    for _, _, _, _, addr in resolved:
+        ip = ipaddress.ip_address(addr[0])
+        if ip.is_private or ip.is_loopback or ip.is_link_local:
+            return False
+        # AWS metadata endpoint 차단
+        if str(ip) == "169.254.169.254":
+            return False
+    return True
+
+
 def fetch_link_text(url: str, timeout: int = 10) -> dict | None:
     """단일 URL에서 제목(title)과 본문 텍스트를 추출한다.
 
     Returns:
         {"url": ..., "title": ..., "text": ...} 또는 실패 시 None
     """
+    if not _is_safe_url(url):
+        _logger.debug("SSRF blocked: %s", url)
+        return None
     try:
-        resp = requests.get(
+        session = requests.Session()
+        session.max_redirects = 5
+        resp = session.get(
             url, timeout=timeout,
             headers={"User-Agent": _USER_AGENT},
             allow_redirects=True,
         )
         resp.raise_for_status()
-    except (requests.RequestException, Exception) as err:
-        _logger.debug(t("link.fetch_error", url=url, err=str(err)))
+    except requests.RequestException:
+        _logger.debug(t("link.fetch_error", url=url, err="request failed"))
         return None
 
     content_type = resp.headers.get("Content-Type", "")

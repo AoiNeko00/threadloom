@@ -708,6 +708,14 @@ _MESSAGES: dict[str, dict[str, str]] = {
         "ko": "총 {n}건 적용 완료. 백업: {backup}",
         "en": "{n} items applied. Backup: {backup}",
     },
+    "enhancer.partial_fail": {
+        "ko": "{n}건 적용 실패 — 해당 항목은 pending에 유지됩니다",
+        "en": "{n} items failed to apply — they remain in pending",
+    },
+    "enhancer.apply_error": {
+        "ko": "[실패] {action_type}: {name}",
+        "en": "[Failed] {action_type}: {name}",
+    },
     "enhancer.review_summary": {
         "ko": "심사 완료: 총 {total}건 → 통과 {approved}건, 거부 {rejected}건",
         "en": "Review done: {total} total → {approved} passed, {rejected} rejected",
